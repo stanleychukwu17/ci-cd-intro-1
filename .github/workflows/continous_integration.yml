@@ -1,0 +1,33 @@
+name: Continuous Integration workflow
+
+on:
+    workflow_dispatch:
+    push:
+        branches:
+            - main
+        paths:
+            - 'web/**'
+    pull_request:
+        branches:
+            - main
+        paths:
+            - 'web/**'
+
+jobs:
+    test:
+        name: testing the api service for the web
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ./web
+                shell: bash
+
+        steps:
+            - name: Checkout the repo
+              uses: actions/checkout@v4
+
+            - name: Install dependencies
+              run: npm install
+            
+            - name: Run tests
+              run: npm run test
