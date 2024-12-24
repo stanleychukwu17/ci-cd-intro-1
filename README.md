@@ -9,7 +9,7 @@ the main branch
 
 - fix any issues with the code and merge into the main branch (jest test)
 
-- write a workflow that deploys the code to aws staging
+- write a github-actions workflow that deploys the code to aws staging
 
 - maybe run cypress test against the staging environment
 
