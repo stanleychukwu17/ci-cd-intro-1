@@ -1,0 +1,35 @@
+# Node.js dependencies
+node_modules
+
+# git files
+.git
+.gitignore
+
+# markdowns
+*.md
+
+# logs
+*.log
+npm-debug.log
+
+# Environment
+*.env
+
+# test
+*test*
+# test/
+# tests/
+# __tests__/
+
+# docker related files
+*Dockerfile*
+docker-compose*.yml
+
+# Temporary or backup files
+*.bak
+*.swp
+*.tmp
+
+# Build artifacts
+dist/
+build/
