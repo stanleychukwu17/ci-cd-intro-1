@@ -1,41 +1,46 @@
-const createError = require('http-errors')
-const express = require('express')
-const path = require('path')
-const cookieParser = require('cookie-parser')
-const logger = require('morgan')
+const express = require('express');
+require('dotenv').config();
+const app = express();
 
-const indexRouter = require('./routes/index')
-const usersRouter = require('./routes/users')
+// for logging
+if (process.env.NODE_ENV === "production") {
+    const morgan = require('morgan');
+    app.use(morgan('combined'));  // 'combined' is a standard log format
+}
+console.log(process.env.NODE_ENV)
 
-const app = express()
+// for security
+const helmet = require('helmet');
+app.use(helmet());
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'))
-app.set('view engine', 'jade')
+// for CORS (Cross-Origin Resource Sharing)
+const cors = require('cors');
+app.use(cors());
 
-app.use(logger('dev'))
-app.use(express.json())
-app.use(express.urlencoded({ extended: false }))
-app.use(cookieParser())
-app.use(express.static(path.join(__dirname, 'public')))
+// for rate limiting
+const rateLimit = require('express-rate-limit');
+const limiter = rateLimit({
+    windowMs: 2 * 60 * 1000, // 2 minute
+    max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
 
-app.use('/', indexRouter)
-app.use('/users', usersRouter)
+// Get the PORT
+const port = process.env.PORT || 4000;
 
-// catch 404 and forward to error handler
-app.use(function (req, res, next) {
-  next(createError(404))
+/* GET home page. */
+app.get('/', function (req, res, next) {
+    res.status(200).json({ title: 'Nimble-ICE' })
 })
-
-// error handler
-app.use(function (err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message
-  res.locals.error = req.app.get('env') === 'development' ? err : {}
-
-  // render the error page
-  res.status(err.status || 500)
-  res.render('error')
+  
+/* GET ice-flakes resource */
+app.get('/ice-flakes', function (req, res, next) {
+    res.status(201)
+        .json({
+            resource: 'ice-flakes',
+            count: 1005,
+            shape: 'rectangle'
+        })
 })
 
 module.exports = app

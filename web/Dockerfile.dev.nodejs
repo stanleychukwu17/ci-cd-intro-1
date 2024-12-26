@@ -1,0 +1,26 @@
+# Use the official Node.js image with Alpine (lightweight)
+FROM node:20.16.0-alpine3.20
+
+# create group and user
+RUN addgroup -S app && adduser -S app -g app
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Copy the package.json files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Change ownership of the app directory
+USER app
+
+# Copy the rest of the application code
+COPY --chown=app:app . ./
+
+# Expose port 3000
+EXPOSE 4000
+
+# Run the application
+CMD [ "npm", "run", "start" ]

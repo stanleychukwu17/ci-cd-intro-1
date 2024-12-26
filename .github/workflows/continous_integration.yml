@@ -1,4 +1,4 @@
-name: testing the api service for the web
+name: Continuous Integration workflow
 
 on:
     workflow_dispatch:
