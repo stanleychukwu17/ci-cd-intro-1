@@ -22,9 +22,6 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-
-//--START-- application
-
 // Get the PORT
 const port = process.env.PORT || 3000;
 
@@ -33,7 +30,7 @@ app.get('/', function (req, res, next) {
     res.status(200).json({ title: 'Nimble-ICE' })
 })
   
-  /* GET ice-flakes resource */
+/* GET ice-flakes resource */
 app.get('/ice-flakes', function (req, res, next) {
     res.status(201)
         .json({
