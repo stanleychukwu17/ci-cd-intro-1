@@ -3,8 +3,11 @@ require('dotenv').config();
 const app = express();
 
 // for logging
-const morgan = require('morgan');
-app.use(morgan('combined'));  // 'combined' is a standard log format
+if (process.env.NODE_ENV === "production") {
+    const morgan = require('morgan');
+    app.use(morgan('combined'));  // 'combined' is a standard log format
+}
+console.log(process.env.NODE_ENV)
 
 // for security
 const helmet = require('helmet');
@@ -23,7 +26,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Get the PORT
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4000;
 
 /* GET home page. */
 app.get('/', function (req, res, next) {
@@ -41,5 +44,3 @@ app.get('/ice-flakes', function (req, res, next) {
 })
 
 module.exports = app
-
-// 
