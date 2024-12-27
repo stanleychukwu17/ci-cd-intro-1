@@ -112,3 +112,37 @@ resource "aws_security_group" "web_sg" {
     }
   ]
 }
+
+resource "aws_key_pair" "demo_key" {
+  key_name   = "devops-directive-demo-key"
+  public_key = file(var.ssh_key_path)
+}
+
+data "aws_ami" "amazon_linux_img" {
+  owners      = ["amazon"]
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-kernel-*-x86_64-gp2"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+}
+
+resource "aws_instance" "app_vm" {
+  ami                         = data.aws_ami.amazon_linux_img.id
+  instance_type               = "t3.micro"
+  subnet_id                   = aws_subnet.web_subnet.id
+  associate_public_ip_address = true
+  vpc_security_group_ids      = [aws.aws_security_group.web_sg.id]
+  key_name                    = aws_key_pair.demo_key.key_name
+  count                       = 1
+
+  tags = {
+    Name = "${local.project} EC2"
+  }
+}
