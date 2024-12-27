@@ -5,6 +5,14 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  # backend "s3" {
+  #   bucket         = "tfstate-demo-app-remote-backend-2024-12-04-03-10-20"
+  #   key            = "github-actions-with-glitch-stream/terraform.tfstate"
+  #   region         = "eu-north-1"
+  #   encrypt        = true
+  #   dynamodb_table = "tfstate-demo-app-remote-lock"
+  # }
 }
 
 provider "aws" {
@@ -138,7 +146,7 @@ resource "aws_instance" "app_vm" {
   instance_type               = "t3.micro"
   subnet_id                   = aws_subnet.web_subnet.id
   associate_public_ip_address = true
-  vpc_security_group_ids      = [aws.aws_security_group.web_sg.id]
+  vpc_security_group_ids      = [aws_security_group.web_sg.id]
   key_name                    = aws_key_pair.demo_key.key_name
   count                       = 1
 
