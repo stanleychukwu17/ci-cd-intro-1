@@ -12,5 +12,5 @@ variable "aws_secret_key" {
 
 variable "allowed_ip_address" {
   description = "I.P addresses allowed to visit the ec2 instance"
-  type = list(string)
+  type        = list(string)
 }
