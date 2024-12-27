@@ -45,5 +45,32 @@ jobs:
                 return response.data.head.ref;
             }
 
-      - name: Checkout the repo
-        uses: actions/checkout@v4
+
+      # ======================================================
+      # Terraform setup
+      # - secrets.TERRAFORM_API_TOKEN: is the Terraform  API Token.
+      # ======================================================
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.10.2
+          cli_config_credentials_token: ${{ secrets.TERRAFORM_API_TOKEN }}
+
+
+      # ======================================================
+      # We need to create a new Terraform resource file and for this we can use the `create_staging_resource.sh` and pass the PR number as an argument.
+      # 
+      # The script returns a JSON string of the format: 
+      # {
+      #   "resource_file": "extra_staging_'${resource_id}'.tf", 
+      #   "terraform_expected_output": "staging_dns_'${resource_id}'"
+      # }
+      #
+      # We use jq to pull out the value of `terraform_expected_output` as we will need it later to fetch the hostname of the staging server
+      # ======================================================
+      - name: 'Create staging environment resource file'
+        id: create_resource_file
+        working-directory: infra/staging/
+        run: |
+          OUTPUT="$(./create_staging_resource.sh PR_${{ github.event.inputs.PR_number }} | jq -r .terraform_expected_output)"
+          echo "STAGING_RESOURCE_NAME=$OUTPUT" >> $GITHUB_ENV
