@@ -119,6 +119,10 @@ resource "aws_security_group" "web_sg" {
       security_groups  = null
     }
   ]
+
+  tags = {
+    Name = "${local.project} SG"
+  }
 }
 
 resource "aws_key_pair" "demo_key" {
@@ -149,6 +153,7 @@ resource "aws_instance" "app_vm" {
   vpc_security_group_ids      = [aws_security_group.web_sg.id]
   key_name                    = aws_key_pair.demo_key.key_name
   count                       = 1
+  user_data                   = file("./entry-point-amazon-linux.sh")
 
   tags = {
     Name = "${local.project} EC2"
