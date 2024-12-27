@@ -14,3 +14,8 @@ variable "allowed_ip_address" {
   description = "I.P addresses allowed to visit the ec2 instance"
   type        = list(string)
 }
+
+variable "ssh_key_path" {
+  description = "key pair path"
+  type        = string
+}
