@@ -145,7 +145,7 @@ data "aws_ami" "amazon_linux_img" {
   }
 }
 
-resource "aws_instance" "app_vm" {
+resource "aws_instance" "main_staging_cicd_demo" {
   ami                         = data.aws_ami.amazon_linux_img.id
   instance_type               = "t3.micro"
   subnet_id                   = aws_subnet.web_subnet.id
@@ -156,6 +156,11 @@ resource "aws_instance" "app_vm" {
   user_data                   = file("./entry-point-amazon-linux.sh")
 
   tags = {
-    Name = "${local.project} EC2"
+    Name = "main_staging_cicd_demo"
   }
+}
+
+output "main_staging_cicd_demo" {
+  description = "the main ec2 dns for staging of code merged into the main branch"
+  value       = aws_instance.main_staging_cicd_demo[0].public_dns
 }

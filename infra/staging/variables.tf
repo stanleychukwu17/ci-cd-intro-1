@@ -23,5 +23,4 @@ variable "public_key" {
 variable "ssh_key_path" {
   description = "key pair path"
   type        = string
-  
 }
