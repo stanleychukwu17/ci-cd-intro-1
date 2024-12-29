@@ -7,7 +7,7 @@
 # changes.
 #
 
-resource "aws_instance" "staging_cicd_demo_RANDOMID" {
+resource "aws_instance" "pr_staging_cicd_demo_RANDOMID" {
   ami                         = data.aws_ami.amazon_linux_img.id
   instance_type               = "t3.micro"
   subnet_id                   = aws_subnet.web_subnet.id
@@ -18,10 +18,10 @@ resource "aws_instance" "staging_cicd_demo_RANDOMID" {
   user_data                   = file("./entry-point-amazon-linux.sh")
 
   tags = {
-    "Name" = "staging_cicd_demo-RANDOMID"
+    "Name" = "pr_staging_cicd_demo-RANDOMID"
   }
 }
 
-output "staging_dns_RANDOMID" {
-  value = aws_instance.staging_cicd_demo_RANDOMID.public_dns
+output "pr_staging_dns_RANDOMID" {
+  value = aws_instance.pr_staging_cicd_demo_RANDOMID[0].public_dns
 }
