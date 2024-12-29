@@ -15,6 +15,11 @@ variable "allowed_ip_address" {
   type        = list(string)
 }
 
+variable "public_key" {
+  description = "public key"
+  type        = string
+}
+
 variable "ssh_key_path" {
   description = "key pair path"
   type        = string

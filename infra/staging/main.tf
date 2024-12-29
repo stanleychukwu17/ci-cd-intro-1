@@ -6,13 +6,13 @@ terraform {
     }
   }
 
-  # backend "s3" {
-  #   bucket         = "tfstate-demo-app-remote-backend-2024-12-04-03-10-20"
-  #   key            = "github-actions-with-glitch-stream/terraform.tfstate"
-  #   region         = "eu-north-1"
-  #   encrypt        = true
-  #   dynamodb_table = "tfstate-demo-app-remote-lock"
-  # }
+  backend "remote" {
+    organization = "stanley_single_team"
+
+    workspaces {
+      name = "github-actions-cicd"
+    }
+  }
 }
 
 provider "aws" {
@@ -127,7 +127,7 @@ resource "aws_security_group" "web_sg" {
 
 resource "aws_key_pair" "demo_key" {
   key_name   = "devops-directive-demo-key"
-  public_key = file(var.ssh_key_path)
+  public_key = var.public_key
 }
 
 data "aws_ami" "amazon_linux_img" {
@@ -145,7 +145,7 @@ data "aws_ami" "amazon_linux_img" {
   }
 }
 
-resource "aws_instance" "app_vm" {
+resource "aws_instance" "main_staging_cicd_demo" {
   ami                         = data.aws_ami.amazon_linux_img.id
   instance_type               = "t3.micro"
   subnet_id                   = aws_subnet.web_subnet.id
@@ -156,6 +156,11 @@ resource "aws_instance" "app_vm" {
   user_data                   = file("./entry-point-amazon-linux.sh")
 
   tags = {
-    Name = "${local.project} EC2"
+    Name = "main_staging_cicd_demo"
   }
+}
+
+output "main_staging_cicd_demo" {
+  description = "the main ec2 dns for staging of code merged into the main branch"
+  value       = aws_instance.main_staging_cicd_demo[0].public_dns
 }

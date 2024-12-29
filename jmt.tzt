@@ -1,0 +1,8 @@
+    create a workflow that destroys all instances
+    do your staging workflow until it does the terraform plan
+    -
+    don't do the apply on github_actions, just do upto the plan section so that no resource is created
+    test your changes on github_actions to see how far
+    -
+    now the main.tf creates the main ec2
+    the example.tf creates the ec2 for pull_request

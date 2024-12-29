@@ -1,0 +1,89 @@
+name: Create staging environment for push request to main site
+
+on:
+  workflow_dispatch:
+    inputs:
+      PR_number:
+        description: 'Pull Request Number'
+        required: true
+
+jobs:
+  create_staging:
+    name: Create Staging environment
+    environment: staging
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./web
+        shell: bash
+
+    steps:
+      # ======================================================
+      # It's important to check that the PR number provided as input is valid and belongs to the repository.
+      # 
+      # This will also return the PR's branch as an output which can be fetched in next steps via:
+      # ${{ steps.verify_pr_number.outputs.result }}
+      # ======================================================
+      - name: Verify Pull Request Number
+        uses: actions/github-script@v7
+        id: verify_pr_number
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          result-encoding: string
+          script: |
+            const response = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: ${{ github.event.inputs.PR_number }}
+            });
+
+            // Check if the pull request is open
+            if (response.data.number !== ${{ github.event.inputs.PR_number }}) {
+                throw new Error('Pull request is not open or number is not valid!');
+            } else {
+                console.log("PR ref: " + response.data.head.ref);
+                return response.data.head.ref;
+            }
+
+
+      # ======================================================
+      # Terraform setup
+      # - secrets.TERRAFORM_API_TOKEN: is the Terraform  API Token.
+      # ======================================================
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.10.2
+          cli_config_credentials_token: ${{ secrets.TERRAFORM_API_TOKEN }}
+
+
+      # ======================================================
+      # We need to create a new Terraform resource file and for this we can use the `create_staging_resource.sh` and pass the PR number as an argument.
+      # 
+      # The script returns a JSON string of the format: 
+      # {
+      #   "resource_file": "extra_staging_'${resource_id}'.tf", 
+      #   "terraform_expected_output": "staging_dns_'${resource_id}'"
+      # }
+      #
+      # We use jq to pull out the value of `terraform_expected_output` as we will need it later to fetch the hostname of the staging server
+      # ======================================================
+      - name: 'Create staging environment resource file'
+        id: create_resource_file
+        working-directory: infra/staging/
+        run: |
+          OUTPUT="$(./create_staging_resource.sh PR_${{ github.event.inputs.PR_number }} | jq -r .terraform_expected_output)"
+          echo "STAGING_RESOURCE_NAME=$OUTPUT" >> $GITHUB_ENV
+
+      - name: Terraform Init and Validate
+        id: init
+        working-directory: infra/staging/
+        run: |
+          terraform init
+          terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color
+        working-directory: infra/staging/
+        continue-on-error: true

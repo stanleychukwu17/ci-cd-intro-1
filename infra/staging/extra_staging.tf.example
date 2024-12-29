@@ -1,0 +1,27 @@
+#
+# This is a template for creating on-demand staging EC2 instances. 
+# this file relies on resources defined in main.tf and cannot be used standalone.
+# 
+# In order to destroy the resources created by this file, just delete
+# the copy belong to the resources you wish to destroy and apply the 
+# changes.
+#
+
+resource "aws_instance" "pr_staging_cicd_demo_RANDOMID" {
+  ami                         = data.aws_ami.amazon_linux_img.id
+  instance_type               = "t3.micro"
+  subnet_id                   = aws_subnet.web_subnet.id
+  associate_public_ip_address = true
+  vpc_security_group_ids      = [aws_security_group.web_sg.id]
+  key_name                    = aws_key_pair.demo_key.key_name
+  count                       = 1
+  user_data                   = file("./entry-point-amazon-linux.sh")
+
+  tags = {
+    "Name" = "pr_staging_cicd_demo-RANDOMID"
+  }
+}
+
+output "pr_staging_dns_RANDOMID" {
+  value = aws_instance.pr_staging_cicd_demo_RANDOMID[0].public_dns
+}
