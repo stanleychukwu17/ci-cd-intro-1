@@ -55,8 +55,10 @@ _exit_1() {
 _main() {
   # local -r: creates a readonly variable
   local -r local_dir="$(_get_local_directory)"
+
   # Current date as a Unix timestamp
   local -r random_id="$(date +%s)"
+
   # Read the first argument passed to the script otherwise default to random_id
   local -r resource_id="${1:-$random_id}"
 
