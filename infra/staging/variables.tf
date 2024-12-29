@@ -13,14 +13,10 @@ variable "aws_secret_key" {
 variable "allowed_ip_address" {
   description = "I.P addresses allowed to visit the ec2 instance"
   type        = list(string)
+  default     = ["0.0.0.0/0"]
 }
 
 variable "public_key" {
   description = "public key"
-  type        = string
-}
-
-variable "ssh_key_path" {
-  description = "key pair path"
   type        = string
 }
