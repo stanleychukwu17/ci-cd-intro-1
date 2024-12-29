@@ -1,4 +1,4 @@
-name: Create staging environment for push request to test site
+name: Create staging environment for push request to main site
 
 on:
   workflow_dispatch:
@@ -74,3 +74,16 @@ jobs:
         run: |
           OUTPUT="$(./create_staging_resource.sh PR_${{ github.event.inputs.PR_number }} | jq -r .terraform_expected_output)"
           echo "STAGING_RESOURCE_NAME=$OUTPUT" >> $GITHUB_ENV
+
+      - name: Terraform Init and Validate
+        id: init
+        working-directory: infra/staging/
+        run: |
+          terraform init
+          terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color
+        working-directory: infra/staging/
+        continue-on-error: true
