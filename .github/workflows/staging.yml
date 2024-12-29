@@ -51,9 +51,6 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Printout working directory
-        run: pwd
-
       # ======================================================
       # Terraform setup
       # - secrets.TERRAFORM_API_TOKEN: is the Terraform  API Token.
@@ -76,6 +73,9 @@ jobs:
       #
       # We use jq to pull out the value of `terraform_expected_output` as we will need it later to fetch the hostname of the staging server
       # ======================================================
+      - name: Ensure script is executable
+        run: chmod +x ./infra/staging/create_staging_resource.sh  # Adjust path if needed
+
       - name: 'Create staging environment resource file'
         id: create_resource_file
         working-directory: infra/staging/
