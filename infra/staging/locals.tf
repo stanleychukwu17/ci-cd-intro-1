@@ -3,5 +3,6 @@ locals {
 
   tags = {
     Project = local.project
+    Owner   = "stanley_single_team"
   }
 }
