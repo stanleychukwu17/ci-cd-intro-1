@@ -1,22 +1,65 @@
-name: "destroy staging environment aws resources"
+name: "destroy resources created on aws"
 on:
     workflow_dispatch:
         inputs:
             PR_number:
                 description: 'Pull Request Number'
                 required: true
+
 jobs:
     destroy_staging:
-        name: Destroy Staging environment
-        environment: staging
+        name: Destroy staging resources created 
         runs-on: ubuntu-latest
         defaults:
             run:
                 shell: bash
+
         steps:
+            # sets up terraform
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v3
+              with:
+                  terraform_version: 1.10.2
+                  cli_config_credentials_token: ${{ secrets.TERRAFORM_API_TOKEN }}
+
+            # checks out the repo
             - name: Checkout the repo
               uses: actions/checkout@v4
+            
+            # check if the pull request number received is valid
+            - name: Verify Pull Request Number
+              uses: actions/github-script@v7
+              id: verify_pr_number
+              with:
+                github-token: ${{ secrets.GITHUB_TOKEN }}
+                result-encoding: string
+                script: |
+                  const response = await github.rest.pulls.get({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: ${{ github.event.inputs.PR_number }}
+                  });
 
-            - name: Setup Terraform
+                  // Check if the pull request number is valid
+                  if (response.data.number !== ${{ github.event.inputs.PR_number }}) {
+                    throw new Error('Pull request number is not valid!');
+                  } else {
+                    console.log("PR ref: " + response.data.head.ref);
+                    return response.data.head.ref;
+                  }
+
+            # sets up terraform.auto.tfvars file
+            - name: Create terraform.auto.tfvars file with all the necessary variables
               run: |
-                echo "You are now rocking with the best"
+                echo "aws_access_key = \"${{ secrets.AWS_ACCESS_KEY}}\"" >> terraform.auto.tfvars
+                echo "aws_secret_key = \"${{ secrets.AWS_SECRET_KEY}}\"" >> terraform.auto.tfvars
+                echo "public_key = \"${{ secrets.PUBLIC_KEY}}\"" >> terraform.auto.tfvars
+
+            # runs terraform destroy
+            - name: Terraform Destroy
+              working-directory: infra/staging/
+              run: terraform destroy -no-color
+            
+            # cleans up terraform.auto.tfvars file
+            - name: Clean up terraform.auto.tfvars file
+              run: rm terraform.auto.tfvars
