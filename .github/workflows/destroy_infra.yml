@@ -69,7 +69,7 @@ jobs:
               working-directory: infra/staging/
               continue-on-error: true
               run: |
-                terraform destroy -var-file="destroy.auto.tfvars" -no-color -auto-approve
+                terraform destroy -no-color -auto-approve
             
             # cleans up destroy.auto.tfvars file
             - name: Clean up destroy.auto.tfvars file
