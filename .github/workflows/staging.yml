@@ -86,6 +86,14 @@ jobs:
         run: |
           OUTPUT="$(./create_staging_resource.sh PR_${{ github.event.inputs.PR_number }} | jq -r .terraform_expected_output)"
           echo "STAGING_RESOURCE_NAME=$OUTPUT" >> $GITHUB_ENV
+        
+      - name: Create terraform.auto.tfvars file with all the necessary variables
+        id: create_tfvars
+        working-directory: infra/staging/
+        run: |
+          echo "aws_access_key = \"${{ secrets.AWS_ACCESS_KEY }}\"" >> terraform.auto.tfvars
+          echo "aws_secret_key = \"${{ secrets.AWS_SECRET_KEY }}\"" >> terraform.auto.tfvars
+          echo "public_key = \"${{ secrets.PUBLIC_KEY }}\"" >> terraform.auto.tfvars
 
       - name: Terraform Init and Validate
         id: init
@@ -99,3 +107,10 @@ jobs:
         run: terraform plan -no-color
         working-directory: infra/staging/
         continue-on-error: true
+
+      - name: Clean up terraform.auto.tfvars file
+        id: cleanup
+        working-directory: infra/staging/
+        run: |
+          rm terraform.auto.tfvars
+          echo "Removed terraform.auto.tfvars file to prevent sensitive data leakage."
