@@ -50,6 +50,7 @@ jobs:
 
             # sets up destroy.auto.tfvars file
             - name: Create destroy.auto.tfvars file with all the necessary variables
+              working-directory: infra/staging/
               run: |
                 echo "aws_access_key = \"${{ secrets.AWS_ACCESS_KEY}}\"" >> destroy.auto.tfvars
                 echo "aws_secret_key = \"${{ secrets.AWS_SECRET_KEY}}\"" >> destroy.auto.tfvars
@@ -72,4 +73,6 @@ jobs:
             
             # cleans up destroy.auto.tfvars file
             - name: Clean up destroy.auto.tfvars file
-              run: rm destroy.auto.tfvars
+              working-directory: infra/staging/
+              run: |
+                rm destroy.auto.tfvars
