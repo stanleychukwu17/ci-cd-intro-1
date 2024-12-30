@@ -48,18 +48,28 @@ jobs:
                     return response.data.head.ref;
                   }
 
-            # sets up terraform.auto.tfvars file
-            - name: Create terraform.auto.tfvars file with all the necessary variables
+            # sets up destroy.auto.tfvars file
+            - name: Create destroy.auto.tfvars file with all the necessary variables
               run: |
-                echo "aws_access_key = \"${{ secrets.AWS_ACCESS_KEY}}\"" >> terraform.auto.tfvars
-                echo "aws_secret_key = \"${{ secrets.AWS_SECRET_KEY}}\"" >> terraform.auto.tfvars
-                echo "public_key = \"${{ secrets.PUBLIC_KEY}}\"" >> terraform.auto.tfvars
+                echo "aws_access_key = \"${{ secrets.AWS_ACCESS_KEY}}\"" >> destroy.auto.tfvars
+                echo "aws_secret_key = \"${{ secrets.AWS_SECRET_KEY}}\"" >> destroy.auto.tfvars
+                echo "public_key = \"${{ secrets.PUBLIC_KEY}}\"" >> destroy.auto.tfvars
+
+            # runs terraform init, because of the backend
+            - name: Terraform Init
+              id: init
+              working-directory: infra/staging/
+              run: |
+                terraform init
 
             # runs terraform destroy
             - name: Terraform Destroy
+              id: destroy
               working-directory: infra/staging/
-              run: terraform destroy -no-color
+              continue-on-error: true
+              run: |
+                terraform destroy -no-color
             
-            # cleans up terraform.auto.tfvars file
-            - name: Clean up terraform.auto.tfvars file
-              run: rm terraform.auto.tfvars
+            # cleans up destroy.auto.tfvars file
+            - name: Clean up destroy.auto.tfvars file
+              run: rm destroy.auto.tfvars
