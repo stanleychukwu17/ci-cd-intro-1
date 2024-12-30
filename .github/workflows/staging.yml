@@ -15,10 +15,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    env:
-      TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
-      TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
-      TF_VAR_public_key: ${{ secrets.PUBLIC_KEY }}
 
     steps:
       # ======================================================
@@ -35,17 +31,17 @@ jobs:
           result-encoding: string
           script: |
             const response = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: ${{ github.event.inputs.PR_number }}
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ github.event.inputs.PR_number }}
             });
 
-            // Check if the pull request is open
+            // Check if the pull request number is valid
             if (response.data.number !== ${{ github.event.inputs.PR_number }}) {
-                throw new Error('Pull request is not open or number is not valid!');
+              throw new Error('Pull request number is not valid!');
             } else {
-                console.log("PR ref: " + response.data.head.ref);
-                return response.data.head.ref;
+              console.log("PR ref: " + response.data.head.ref);
+              return response.data.head.ref;
             }
 
 
