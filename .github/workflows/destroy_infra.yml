@@ -55,10 +55,20 @@ jobs:
                 echo "aws_secret_key = \"${{ secrets.AWS_SECRET_KEY}}\"" >> terraform.auto.tfvars
                 echo "public_key = \"${{ secrets.PUBLIC_KEY}}\"" >> terraform.auto.tfvars
 
+            # runs terraform init, because of the backend
+            - name: Terraform Init
+              id: init
+              working-directory: infra/staging/
+              run: |
+                terraform init
+
             # runs terraform destroy
             - name: Terraform Destroy
+              id: destroy
               working-directory: infra/staging/
-              run: terraform destroy -no-color
+              continue-on-error: true
+              run: |
+                terraform destroy -no-color
             
             # cleans up terraform.auto.tfvars file
             - name: Clean up terraform.auto.tfvars file
