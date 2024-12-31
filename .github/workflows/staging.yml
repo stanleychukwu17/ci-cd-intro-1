@@ -45,7 +45,7 @@ jobs:
             }
 
       # ======================================================
-      # Checkout the repo and build the cocker image
+      # Checkout the repo and build the docker image
       # ======================================================
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -62,11 +62,15 @@ jobs:
 
       - name: Build Docker image
         working-directory: web/
-        run: docker build -t stanleychukwu17/github-actions-demo-node-app:${{ github.event.inputs.PR_number }} .
+        run: |
+          echo "BACKEND_DOCKER_IMG ${{ env.BACKEND_DOCKER_IMG }}"
+          docker build -t ${{ env.BACKEND_DOCKER_IMG }} -f Dockerfile.dev.nodejs .
 
       - name: Push Docker image to Docker Hub
         working-directory: web/
-        run: docker push stanleychukwu17/github-actions-demo-node-app:${{ github.event.inputs.PR_number }}
+        run: |
+          docker images ls
+          docker push ${{ env.BACKEND_DOCKER_IMG }}
 
       - name: exit the workflow, let me see if the steps above are working
         run: exit 0
