@@ -152,7 +152,7 @@ resource "aws_instance" "main_staging_cicd_demo" {
   associate_public_ip_address = true
   vpc_security_group_ids      = [aws_security_group.web_sg.id]
   key_name                    = aws_key_pair.demo_key.key_name
-  count                       = 1
+  count                       = 0
   user_data                   = file("./entry-point-amazon-linux.sh")
 
   tags = {
@@ -162,5 +162,5 @@ resource "aws_instance" "main_staging_cicd_demo" {
 
 output "main_staging_cicd_demo" {
   description = "the main ec2 dns for staging of code merged into the main branch"
-  value       = aws_instance.main_staging_cicd_demo[0].public_dns
+  value       = length(aws_instance.main_staging_cicd_demo) > 0 ? aws_instance.main_staging_cicd_demo[0].public_dns : null
 }
