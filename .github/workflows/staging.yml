@@ -44,12 +44,32 @@ jobs:
               return response.data.head.ref;
             }
 
-
       # ======================================================
-      # Checkout the repo
+      # Checkout the repo and build the cocker image
       # ======================================================
       - name: Checkout Repo
         uses: actions/checkout@v4
+
+      # login to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3  
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set Docker image tag
+        run: echo "BACKEND_DOCKER_IMG=stanleychukwu17/github-actions-demo-node-app:${{ github.event.inputs.PR_number }}" >> $GITHUB_ENV
+
+      - name: Build Docker image
+        working-directory: web/
+        run: docker build -t stanleychukwu17/github-actions-demo-node-app:${{ github.event.inputs.PR_number }} .
+
+      - name: Push Docker image to Docker Hub
+        working-directory: web/
+        run: docker push stanleychukwu17/github-actions-demo-node-app:${{ github.event.inputs.PR_number }}
+
+      - name: exit the workflow, let me see if the steps above are working
+        run: exit 0
 
       # ======================================================
       # Terraform setup
@@ -107,6 +127,13 @@ jobs:
       # ======================================================
       # Once Terraform Plan is completed we need to update
       # the PR with the results of the plan
+      # 
+      # Pull requests are treated as issues in GitHub's API
+      # so we use the `github.rest.issues.createComment` action
+      # to add a comment to the PR.
+      #
+      # Ensure that the GITHUB_TOKEN has write permissions for issues and pull requests.
+      # You can adjust this in the "repository settings" under Actions > General > Workflow permissions.
       # ======================================================
       - name: Update Pull Request
         uses: actions/github-script@v7
@@ -123,13 +150,14 @@ jobs:
                 <summary>Show Plan</summary>
 
                 \`\`\`\n
-                ${process.env.PLAN}
+                  ${process.env.PLAN}
                 \`\`\`
               </details>
 
               *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*
             `;
 
+            # 
             github.rest.issues.createComment({
               issue_number: ${{ github.event.inputs.PR_number }},
               owner: context.repo.owner,
@@ -146,6 +174,7 @@ jobs:
         working-directory: infra/staging/
         run: |
           terraform apply -no-color -auto-approve
+
 
       # ======================================================
       # If everything goes well and the Terraform plan and apply was
@@ -166,22 +195,41 @@ jobs:
       # to fail. We don't want that. We can use the `|| echo`
       # to print "Nothing to commit" to the console if 
       # git push fails.
+      # --FINALLY--
+      # no need to commit the files generated during this workflow since all the
+      # resources created are stored in our .tfstate in the terraform backend cloud,
+      # so when we run "terraform destroy", it will destroy the resources
+      # that is why i commented out the steps below
       # ======================================================
-      - name: Commit terraform resource files to the PR
-        working-directory: infra/staging/
-        run: |
-          echo "actor: ${{ github.actor }}"
-          echo "url: https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+      #- name: Commit terraform resource files to the PR
+      #  working-directory: infra/staging/
+      #  run: |
+      #    echo "actor: ${{ github.actor }}"
+      #    echo "url: https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
 
-          git status
-          git status --porcelain
+      #    # check if there are any new files
+      #    git status --porcelain | grep -q . && echo "NEW_FILES=true" >> $GITHUB_ENV || echo "NEW_FILES=false" >> $GITHUB_ENV
 
-          git config --global user.name '${{ github.actor }}'
-          git config --global user.email '${{ github.actor}}@users.noreply.github.com'
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git add ./\*.tf
-          git commit -m "Add terraform resource files" && \
-            git push || echo "Nothing to commit"
+      #    git config --global user.name '${{ github.actor }}'
+      #    git config --global user.email '${{ github.actor}}@users.noreply.github.com'
+      #    git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+
+      #    git switch -c workflow-branch
+      #    git add ./\*.tf
+
+      #    git commit -m "Add terraform resource files" && \
+      #    git push origin workflow-branch || echo "Nothing to commit"
+
+      ## env.NEW_FILES is created from the previous step
+      #- name: Create Pull Request
+      #  uses: peter-evans/create-pull-request@v7
+      #  if: ${{ env.NEW_FILES == 'true' }}
+      #  with:
+      #    token: ${{ secrets.GITHUB_TOKEN }}
+      #    base: main
+      #    branch: workflow-branch
+      #    title: "Update generated files"
+      #    body: "This PR updates the generated files."
 
 
       # =====================================================
