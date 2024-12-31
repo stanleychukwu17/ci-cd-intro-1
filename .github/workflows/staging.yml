@@ -104,6 +104,89 @@ jobs:
         working-directory: infra/staging/
         continue-on-error: true
 
+      # ======================================================
+      # Once Terraform Plan is completed we need to update
+      # the PR with the results of the plan
+      # ======================================================
+      - name: Update Pull Request
+        uses: actions/github-script@v7
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `
+              #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+              #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+
+              <details>
+                <summary>Show Plan</summary>
+
+                \`\`\`\n
+                ${process.env.PLAN}
+                \`\`\`
+              </details>
+
+              *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: ${{ github.event.inputs.PR_number }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: Terraform plan status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraform Apply
+        id: apply
+        working-directory: infra/staging/
+        run: |
+          terraform apply -no-color -auto-approve
+
+      # ======================================================
+      # If everything goes well and the Terraform plan and apply was
+      # executed successfully, and the resources were created
+      # we need to commit the new resource file and push it
+      # 
+      # If we don't do this, every time this workflow runs
+      # it will destroy the resources created by previous
+      # runs. We need to persist the state in the repository
+      # for this to work.
+      # 
+      # Here we use a neat little trick:
+      # git commit -m "Add terraform resource files" && \
+      #      git push || echo "Nothing to commit"
+      #
+      # git push will fail with a non-zero exit if there 
+      # are no changes to commit and this will cause the workflow
+      # to fail. We don't want that. We can use the `|| echo`
+      # to print "Nothing to commit" to the console if 
+      # git push fails.
+      # ======================================================
+      - name: Commit terraform resource files to the PR
+        working-directory: infra/staging/
+        run: |
+          echo "actor: ${{ github.actor }}"
+          echo "url: https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+
+          git status
+          git status --porcelain
+
+          git config --global user.name '${{ github.actor }}'
+          git config --global user.email '${{ github.actor}}@users.noreply.github.com'
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git add ./\*.tf
+          git commit -m "Add terraform resource files" && \
+            git push || echo "Nothing to commit"
+
+
+      # =====================================================
+      # now clean up the terraform.auto.tfvars file
+      # =====================================================
       - name: Clean up terraform.auto.tfvars file
         id: cleanup
         working-directory: infra/staging/
