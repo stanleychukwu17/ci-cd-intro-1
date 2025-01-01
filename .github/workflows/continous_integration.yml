@@ -30,4 +30,8 @@ jobs:
               run: npm install
             
             - name: Run tests
+              env:
+                PORT: 4000
+                NODE_ENV: development
+                ENV: development
               run: npm run test

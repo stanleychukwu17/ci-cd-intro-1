@@ -1,3 +1,18 @@
-finish up the rest of staging
+once done with nginx, start docker and run the application
+
+
+test everything to see it is working as expected
+we have to use bash to replace the ip_address in our nginx configuration
+back to the ec2 - let all we've done work as expected in our configuration
+
+continue with the ec2 setup to run the application using docker
+configure the docker app to run with nginx
+-
+test and make sure app is live on line
+restart the application using docker-compose
 ---
+my public_key shows up in the terraform plan, i need to find a way to clean it up before commenting on the PR
 running the application on docker
+
+
+docker-compose up --build -f docker-compose.dev.yml .

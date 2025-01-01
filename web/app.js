@@ -7,7 +7,7 @@ if (process.env.NODE_ENV === "production") {
     const morgan = require('morgan');
     app.use(morgan('combined'));  // 'combined' is a standard log format
 }
-console.log(process.env.NODE_ENV)
+// console.log(process.env.NODE_ENV)
 
 // for security
 const helmet = require('helmet');
@@ -17,16 +17,11 @@ app.use(helmet());
 const cors = require('cors');
 app.use(cors());
 
-// for rate limiting
-const rateLimit = require('express-rate-limit');
-const limiter = rateLimit({
-    windowMs: 2 * 60 * 1000, // 2 minute
-    max: 100 // limit each IP to 100 requests per windowMs
-});
-app.use(limiter);
-
-// Get the PORT
-const port = process.env.PORT || 4000;
+// Check if process.env.PORT is set, if not, throw an error
+if (!process.env.PORT) {
+    throw new Error('The PORT environment variable is not defined!');
+}
+const port = process.env.PORT;
 
 /* GET home page. */
 app.get('/', function (req, res, next) {
