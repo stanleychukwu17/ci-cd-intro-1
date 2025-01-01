@@ -19,7 +19,7 @@ USER app
 # Copy the rest of the application code
 COPY --chown=app:app . ./
 
-# Expose port 3000
+# Expose port 4000
 EXPOSE 4000
 
 # Run the application
