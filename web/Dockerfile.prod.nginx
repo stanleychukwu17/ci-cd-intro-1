@@ -1,0 +1,18 @@
+# Use Debian slim as the base image
+FROM debian:bullseye-20241202-slim
+
+# Install dependencies (nginx, certbot, curl)
+RUN apt-get update && apt-get install -y \
+    nginx \
+    certbot \
+    python3-certbot-nginx \
+    curl
+
+# Copy custom NGINX configuration into the container
+COPY nginx-prod.conf /etc/nginx/nginx.conf
+
+# Expose the necessary ports for NGINX
+EXPOSE 80 443
+
+# Command to run NGINX in the foreground
+CMD ["nginx", "-g", "daemon off;"]
